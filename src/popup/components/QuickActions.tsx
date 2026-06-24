@@ -16,16 +16,11 @@ interface QuickActionsProps {
 
 const QuickActions: React.FC<QuickActionsProps> = ({ actions }) => {
   return (
-    <div className="quick-actions-grid">
+    <div className="action-grid">
       {actions.map((action) => (
-        <button key={action.key} className="quick-action-card" onClick={action.onClick}>
-          <span className="quick-action-card__icon">
-            <Icon name={action.icon} />
-          </span>
-          <span className="quick-action-card__label">{action.label}</span>
-          <span className="quick-action-card__arrow">
-            <Icon name="arrow-right" />
-          </span>
+        <button key={action.key} className="action-card" onClick={action.onClick}>
+          <Icon name={action.icon} />
+          <span>{action.label}</span>
         </button>
       ))}
     </div>

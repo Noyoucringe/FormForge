@@ -11,44 +11,33 @@ interface PersonaCardProps {
 
 const PersonaCard: React.FC<PersonaCardProps> = ({ persona, onSelect, onEdit, onDelete }) => {
   return (
-    <article className={`persona-card ${persona.active ? 'persona-card--active' : ''}`}>
-      <div className="persona-card__body">
-        <div className="persona-card__header">
-          <div>
-            <h3>{persona.name}</h3>
-            <p>{persona.role}</p>
-          </div>
-          {persona.active && <span className="persona-card__badge">Active</span>}
-        </div>
-
-        <div className="persona-card__meta">
-          <span>{persona.resumeCount} resumes</span>
-          <span>Updated {persona.lastUpdated}</span>
-        </div>
-
-        <div className="chips-row">
-          {persona.skills.slice(0, 4).map((skill) => (
-            <span key={skill} className="chip">
-              {skill}
-            </span>
+    <div className={`list-item ${persona.active ? 'active' : ''}`} onClick={() => onSelect(persona.id)} style={{ cursor: 'pointer' }}>
+      <div className="persona-info">
+        <span className="persona-name">{persona.name}</span>
+        <span className="persona-meta">{persona.role}</span>
+        <div style={{ display: 'flex', gap: '4px', marginTop: '4px', flexWrap: 'wrap' }}>
+          {persona.skills.slice(0, 3).map((skill) => (
+            <span key={skill} className="tag">{skill}</span>
           ))}
         </div>
       </div>
-
-      <div className="persona-card__footer">
-        <button className="btn btn-secondary btn-sm" onClick={() => onSelect(persona.id)}>
-          Select Persona
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <button 
+          className="btn btn-ghost btn-icon-only" 
+          onClick={(e) => { e.stopPropagation(); onEdit(persona.id); }} 
+          title="Edit"
+        >
+          <Icon name="edit" style={{ width: 14, height: 14 }} />
         </button>
-        <div className="persona-card__inline-actions">
-          <button className="icon-button" onClick={() => onEdit(persona.id)} title="Edit Persona">
-            <Icon name="edit" />
-          </button>
-          <button className="icon-button icon-button--danger" onClick={() => onDelete(persona.id)} title="Delete Persona">
-            <Icon name="trash" />
-          </button>
-        </div>
+        <button 
+          className="btn btn-ghost btn-icon-only text-danger" 
+          onClick={(e) => { e.stopPropagation(); onDelete(persona.id); }} 
+          title="Delete"
+        >
+          <Icon name="trash" style={{ width: 14, height: 14 }} />
+        </button>
       </div>
-    </article>
+    </div>
   );
 };
 

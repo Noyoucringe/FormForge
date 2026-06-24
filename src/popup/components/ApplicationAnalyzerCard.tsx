@@ -15,23 +15,22 @@ const ApplicationAnalyzerCard: React.FC<ApplicationAnalyzerCardProps> = ({
   onCheckAtsMatch,
 }) => {
   return (
-    <div className="feature-panel">
-      <div className="feature-panel__header">
-        <div>
-          <p className="eyebrow">Application Analyzer</p>
-          <h3>{pageState}</h3>
-        </div>
-        <Icon name="analyze" className="feature-panel__icon" />
+    <div className="section-container">
+      <div className="section-header">
+        <h2 className="section-title">
+          <Icon name="analyze" />
+          App Analyzer
+        </h2>
+        <span className="tag" style={{ color: 'var(--primary)', borderColor: 'var(--primary)' }}>{pageState}</span>
       </div>
-
-      <div className="button-stack">
-        <button className="btn btn-secondary btn-wide" onClick={onAnalyzeForm}>
+      <div className="section-content" style={{ padding: 'var(--spacing-md)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+        <button className="btn btn-secondary btn-block" onClick={onAnalyzeForm}>
           Analyze Form
         </button>
-        <button className="btn btn-secondary btn-wide" onClick={onRecommendPersona}>
+        <button className="btn btn-secondary btn-block" onClick={onRecommendPersona}>
           Recommend Persona
         </button>
-        <button className="btn btn-secondary btn-wide" onClick={onCheckAtsMatch}>
+        <button className="btn btn-secondary btn-block" onClick={onCheckAtsMatch}>
           Check ATS Match
         </button>
       </div>

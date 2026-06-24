@@ -148,10 +148,9 @@ const Popup: React.FC = () => {
         onOpenWebsite={handleWebsiteIntegration}
       />
 
-      <div className="dashboard-grid">
+      <div className="popup-content">
         <SectionCard
           title="User Status"
-          subtitle="Account and security overview"
           icon="status"
         >
           <StatusCard
@@ -164,7 +163,6 @@ const Popup: React.FC = () => {
 
         <SectionCard
           title="Persona Management"
-          subtitle="Select, edit, and organize professional personas"
           icon="persona"
           action={
             <button className="btn btn-primary btn-sm" onClick={handleCreateProfile}>
@@ -185,7 +183,7 @@ const Popup: React.FC = () => {
           </div>
         </SectionCard>
 
-        <SectionCard title="Quick Actions" subtitle="Core workflows" icon="dashboard">
+        <SectionCard title="Quick Actions" icon="dashboard">
           <QuickActions
             actions={[
               { key: 'fill', label: 'Fill Current Form', icon: 'check', onClick: () => handlePlaceholder('Fill Current Form') },
@@ -197,7 +195,7 @@ const Popup: React.FC = () => {
           />
         </SectionCard>
 
-        <div className="dashboard-two-column">
+        <div className="grid-2">
           <AiAssistantCard onGenerateResponse={() => handlePlaceholder('Generate Response')} />
           <ApplicationAnalyzerCard
             pageState={mockPageState}
@@ -207,7 +205,7 @@ const Popup: React.FC = () => {
           />
         </div>
 
-        <div className="dashboard-two-column">
+        <div className="grid-2">
           <SecurityVaultCard
             onVerifyIdentity={() => setView('password')}
             onUnlockSensitiveFields={() => setView('password')}
@@ -220,13 +218,12 @@ const Popup: React.FC = () => {
           />
         </div>
 
-        <SectionCard title="Analytics" subtitle="Placeholder product metrics" icon="analytics">
+        <SectionCard title="Analytics" icon="analytics">
           <AnalyticsSection metrics={metrics} />
         </SectionCard>
 
         <SectionCard
           title="Existing Profiles"
-          subtitle="Original storage-backed profile functionality"
           icon="resume"
           action={
             <button className="btn btn-secondary btn-sm" onClick={handleCreateProfile}>

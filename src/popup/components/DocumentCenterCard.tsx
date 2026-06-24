@@ -16,46 +16,39 @@ const DocumentCenterCard: React.FC<DocumentCenterCardProps> = ({
   onDelete,
 }) => {
   return (
-    <div className="feature-panel">
-      <div className="feature-panel__header">
-        <div>
-          <p className="eyebrow">Document Center</p>
-          <h3>Manage resumes and supporting files</h3>
-        </div>
-        <Icon name="file" className="feature-panel__icon" />
+    <div className="section-container">
+      <div className="section-header">
+        <h2 className="section-title">
+          <Icon name="file" />
+          Document Center
+        </h2>
+        <button className="btn btn-ghost btn-icon-only" onClick={onUpload} title="Upload Document">
+          <Icon name="upload" style={{ width: 14, height: 14 }} />
+        </button>
       </div>
 
-      <div className="document-groups">
-        {['Resumes', 'Certificates', 'Offer Letters'].map((group) => (
-          <div key={group} className="document-group">
-            <h4>{group}</h4>
-            <div className="document-group__items">
-              {documents
-                .filter((item) => item.category === group)
-                .map((item) => (
-                  <div key={item.id} className="document-item">
-                    <div>
-                      <strong>{item.name}</strong>
-                      <p>{item.size} • Updated {item.updatedAt}</p>
-                    </div>
-                    <div className="document-item__actions">
-                      <button className="icon-button" onClick={() => onView(item.id)} title="View">
-                        <Icon name="eye" />
-                      </button>
-                      <button className="icon-button" onClick={() => onDelete(item.id)} title="Delete">
-                        <Icon name="trash" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+      <div className="section-content">
+        <div className="list-group">
+          {documents.map((item) => (
+            <div key={item.id} className="list-item" style={{ padding: 'var(--spacing-sm) var(--spacing-md)' }}>
+              <div className="persona-info">
+                <span className="persona-name" style={{ fontSize: '0.75rem' }}>{item.name}</span>
+                <span className="persona-meta" style={{ fontSize: '0.65rem' }}>
+                  {item.category} • {item.size}
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <button className="btn btn-ghost btn-icon-only" onClick={() => onView(item.id)} title="View">
+                  <Icon name="eye" style={{ width: 14, height: 14 }} />
+                </button>
+                <button className="btn btn-ghost btn-icon-only text-danger" onClick={() => onDelete(item.id)} title="Delete">
+                  <Icon name="trash" style={{ width: 14, height: 14 }} />
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-
-      <button className="btn btn-secondary btn-wide" onClick={onUpload}>
-        Upload Document
-      </button>
     </div>
   );
 };
