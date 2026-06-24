@@ -895,7 +895,320 @@ button {
   line-height: 1.4;
 }
 
+/* Refactored extension application shell */
+.ff-body {
+  grid-template-columns: 178px 1fr;
+}
+
+.ff-nav-section {
+  min-height: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ff-sidebar-footer {
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.ff-nav-item {
+  height: 34px;
+  gap: 9px;
+  padding: 0 9px;
+}
+
+.ff-nav-item span {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-nav-item .ff-badge {
+  min-height: 18px;
+  margin-left: auto;
+  padding: 0 6px;
+  font-size: 9px;
+}
+
+.ff-tab {
+  gap: 12px;
+}
+
+.ff-tab h2 {
+  font-size: 21px;
+}
+
+.ff-tab-header p {
+  font-size: 12px;
+}
+
+.ff-tab-content {
+  overflow: hidden;
+  padding-right: 0;
+}
+
+.ff-card {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-raised);
+  box-shadow: var(--shadow);
+}
+
+.ff-card.is-selected {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
+}
+
+.ff-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.ff-card-header > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ff-card-header svg {
+  width: 15px;
+  height: 15px;
+  color: var(--text-muted);
+}
+
+.ff-card h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ff-dashboard-grid,
+.ff-settings-grid,
+.ff-metric-grid,
+.ff-roadmap-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.ff-dashboard-grid,
+.ff-settings-grid,
+.ff-metric-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ff-span-2 {
+  grid-column: 1 / -1;
+}
+
+.ff-assistant-grid,
+.ff-document-grid {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 0.78fr 1.22fr;
+  gap: 12px;
+}
+
+.ff-document-grid {
+  grid-template-columns: 1.2fr 0.8fr;
+}
+
+.ff-roadmap-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ff-hero-actions,
+.ff-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ff-toolbar {
+  justify-content: space-between;
+}
+
+.ff-search {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-raised);
+}
+
+.ff-search svg {
+  width: 15px;
+  height: 15px;
+  color: var(--text-muted);
+}
+
+.ff-search input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+}
+
+.ff-search input::placeholder {
+  color: var(--text-muted);
+}
+
+.ff-button-action {
+  min-height: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+}
+
+.ff-button-action svg {
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+}
+
+.ff-button-action span {
+  max-width: 100%;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.ff-button-action:hover,
+.ff-button-secondary:hover,
+.ff-button-ghost:hover,
+.ff-button-danger:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-subtle);
+}
+
+.ff-button-ghost {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.ff-button-danger {
+  background: transparent;
+  color: var(--danger);
+}
+
+.ff-button:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.ff-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 999px;
+  animation: ff-spin 700ms linear infinite;
+}
+
+@keyframes ff-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ff-persona-list,
+.ff-library-card .ff-list {
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.ff-persona-list {
+  max-height: 334px;
+}
+
+.ff-library-card .ff-list {
+  max-height: 278px;
+}
+
+.ff-persona-card .ff-button,
+.ff-row-actions .ff-button {
+  width: 30px;
+  min-height: 30px;
+  padding: 0;
+}
+
+.ff-row-actions .ff-button span {
+  display: none;
+}
+
+.ff-response-box {
+  height: 100%;
+  min-height: 214px;
+}
+
+.ff-response-textarea {
+  min-height: 134px;
+}
+
+.ff-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.42);
+}
+
+.ff-modal {
+  width: 460px;
+  max-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-raised);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+}
+
+.ff-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ff-modal-header h2 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.ff-modal-body {
+  padding: 14px;
+}
+
+.ff-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 @supports not (color: color-mix(in srgb, white, black)) {
+  .ff-card.is-selected,
   .ff-panel.is-selected {
     border-color: var(--accent);
   }
