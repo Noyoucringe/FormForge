@@ -120,8 +120,12 @@ button {
 }
 
 .ff-brand p {
+  max-width: 460px;
   font-size: 12px;
   color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ff-header-actions {
@@ -241,7 +245,21 @@ button {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  overflow: hidden;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.ff-tab-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ff-tab-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ff-tab-content::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
 }
 
 .ff-panel {
@@ -403,6 +421,10 @@ button {
   gap: 8px;
 }
 
+.ff-action-grid-three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .ff-action-button,
 .ff-button,
 .ff-icon-button {
@@ -521,6 +543,11 @@ button {
   flex-direction: column;
 }
 
+.ff-list-compact .ff-list-row {
+  min-height: 44px;
+  padding: 8px 0;
+}
+
 .ff-list-row {
   min-height: 48px;
   display: flex;
@@ -555,6 +582,17 @@ button {
   gap: 12px;
 }
 
+.ff-persona-select {
+  min-width: 0;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
 .ff-card-heading {
   display: flex;
   align-items: center;
@@ -573,7 +611,7 @@ button {
 }
 
 .ff-response-box {
-  min-height: 164px;
+  min-height: 186px;
   padding: 14px;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -587,11 +625,23 @@ button {
   margin-bottom: 12px;
 }
 
-.ff-response-box p {
-  margin: 0;
+.ff-response-textarea {
+  width: 100%;
+  min-height: 116px;
+  resize: none;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 12px;
+  background: var(--surface-raised);
   color: var(--text-soft);
   font-size: 13px;
   line-height: 1.65;
+  font-family: inherit;
+}
+
+.ff-response-textarea:focus {
+  outline: 2px solid color-mix(in srgb, var(--accent) 28%, transparent);
+  border-color: var(--accent);
 }
 
 .ff-vault-grid {
@@ -602,11 +652,11 @@ button {
 
 .ff-vault-item {
   display: grid;
-  grid-template-columns: 18px 1fr auto;
+  grid-template-columns: 18px 1fr;
   align-items: center;
   gap: 8px;
-  min-height: 48px;
-  padding: 0 10px;
+  min-height: 60px;
+  padding: 9px 10px;
   border: 1px solid var(--border);
   border-radius: 7px;
   background: var(--surface);
@@ -622,6 +672,16 @@ button {
   color: var(--text);
   font-size: 12px;
   font-weight: 700;
+}
+
+.ff-vault-item strong {
+  grid-column: 2;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ff-document-row {
@@ -704,6 +764,135 @@ button {
 .ff-setting-icon svg {
   width: 16px;
   height: 16px;
+}
+
+.ff-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.ff-form-grid .ff-field:nth-child(2),
+.ff-form-grid .ff-field:nth-child(3) {
+  grid-column: 1 / -1;
+}
+
+.ff-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ff-field span {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ff-field input {
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 0 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+}
+
+.ff-field input:focus {
+  outline: 2px solid color-mix(in srgb, var(--accent) 28%, transparent);
+  border-color: var(--accent);
+}
+
+.ff-form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ff-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  cursor: pointer;
+}
+
+.ff-toggle-row span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.ff-toggle-row strong {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.ff-toggle-row small {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.ff-toggle-row input {
+  appearance: none;
+  width: 38px;
+  height: 22px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface-subtle);
+  cursor: pointer;
+  position: relative;
+  transition: 140ms ease;
+}
+
+.ff-toggle-row input::after {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--text-muted);
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: 140ms ease;
+}
+
+.ff-toggle-row input:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.ff-toggle-row input:checked::after {
+  background: #fff;
+  transform: translateX(16px);
+}
+
+.ff-preview,
+.ff-empty-state {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-height: 52px;
+  justify-content: center;
+}
+
+.ff-preview strong,
+.ff-empty-state strong {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.ff-preview span,
+.ff-empty-state span {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 @supports not (color: color-mix(in srgb, white, black)) {
