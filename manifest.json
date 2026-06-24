@@ -5,6 +5,7 @@
   "description": "Intelligent form autofill with user profiles",
   "permissions": [
     "storage",
+    "tabs",
     "activeTab",
     "scripting"
   ],
