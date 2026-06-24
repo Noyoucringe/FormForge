@@ -19,13 +19,13 @@
   
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
-  --spacing-md: 0.75rem;
-  --spacing-lg: 1.25rem;
-  --spacing-xl: 1.5rem;
+  --spacing-md: 0.875rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
   
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
 }
 
 body {
@@ -70,23 +70,25 @@ body {
 }
 
 .header-brand-icon {
-  width: 20px;
-  height: 20px;
-  background: var(--primary);
-  border-radius: 4px;
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(180deg, var(--primary), var(--primary-hover));
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 13px;
   color: white;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.2);
 }
 
 .header-brand h1 {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 600;
   margin: 0;
   letter-spacing: -0.01em;
+  color: #fff;
 }
 
 .header-actions {
@@ -145,17 +147,15 @@ body {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 500;
   color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   margin: 0;
 }
 
 .section-title svg {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   color: var(--text-muted);
 }
 
@@ -209,22 +209,29 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-sm);
+  gap: 6px;
   padding: 6px 12px;
   border-radius: var(--radius-sm);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.1s ease;
   border: 1px solid transparent;
   font-family: inherit;
+  height: 28px;
+}
+
+.btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
 }
 
 .btn-primary {
   background: var(--primary);
   color: white;
   border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.1);
 }
 
 .btn-primary:hover {
@@ -257,8 +264,14 @@ body {
 }
 
 .btn-sm {
-  padding: 4px 8px;
-  font-size: 0.7rem;
+  padding: 0 8px;
+  font-size: 0.75rem;
+  height: 24px;
+}
+
+.btn-sm svg {
+  width: 12px;
+  height: 12px;
 }
 
 .btn-block {
@@ -301,25 +314,25 @@ body {
 }
 
 .persona-name {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 500;
-  color: var(--text-primary);
+  color: #fff;
 }
 
 .persona-meta {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--text-secondary);
 }
 
 .tag {
-  background: var(--surface-hover);
-  border: 1px solid var(--border);
-  padding: 1px 4px;
-  border-radius: 3px;
-  font-size: 0.65rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
   color: var(--text-secondary);
 }
 
@@ -333,17 +346,18 @@ body {
 
 .action-card {
   background: var(--surface);
-  padding: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-md);
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  flex-direction: row;
+  align-items: center;
   gap: var(--spacing-sm);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.1s ease;
   border: none;
   text-align: left;
   color: var(--text-primary);
   font-family: inherit;
+  height: 44px;
 }
 
 .action-card:hover {
