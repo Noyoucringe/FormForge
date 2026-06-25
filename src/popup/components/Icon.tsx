@@ -37,6 +37,9 @@ export type IconName =
   | 'chevron-down'
   | 'external'
   | 'hash'
+  | 'brain'
+  | 'flask'
+  | 'code'
   | 'layers';
 
 interface IconProps {
@@ -121,6 +124,12 @@ const getSvgContent = (name: IconName) => {
       return <><line x1="4" y1="9" x2="20" y2="9" /><line x1="4" y1="15" x2="20" y2="15" /><line x1="10" y1="3" x2="8" y2="21" /><line x1="16" y1="3" x2="14" y2="21" /></>;
     case 'layers':
       return <><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" /></>;
+    case 'brain':
+      return <><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1 0-3.12 3 3 0 0 1 0-4.88 2.5 2.5 0 0 1 0-3.12A2.5 2.5 0 0 1 9.5 2zM14.5 2a2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1 0 3.12 3 3 0 0 1 0 4.88 2.5 2.5 0 0 1 0 3.12 2.5 2.5 0 0 1-4.96.44V4.5A2.5 2.5 0 0 1 14.5 2z" /></>;
+    case 'flask':
+      return <><path d="M6 3h12M10 3v6L4 19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2L14 9V3" /></>;
+    case 'code':
+      return <><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></>;
     default:
       return null;
   }
