@@ -1,1034 +1,1204 @@
 import React, { useMemo, useState } from 'react';
 import Badge from './components/Badge';
-import Button from './components/Button';
-import Card from './components/Card';
 import Icon, { IconName } from './components/Icon';
-import Modal from './components/Modal';
-import PersonaCard, { PersonaCardModel } from './components/PersonaCard';
-import SearchBar from './components/SearchBar';
 import './popup.css';
 
-type TabId =
-  | 'home'
-  | 'personas'
-  | 'personaWorkspace'
-  | 'vault'
-  | 'analytics'
-  | 'settings';
+/* ================================================================
+   TYPES
+   ================================================================ */
 
+type TabId = 'home' | 'profileWorkspace' | 'vault' | 'analytics' | 'settings';
+type WorkspaceTab = 'overview' | 'skills' | 'projects' | 'documents';
 type ThemeMode = 'light' | 'dark';
-type AssistantMode = 'answers' | 'projects' | 'summaries';
-type DocumentCategory = 'Resumes' | 'Certificates' | 'Offer Letters';
 type AiTone = 'Professional' | 'Concise' | 'Confident';
 
+interface KnowledgeBaseEntry { key: string; value: string; }
+interface KnowledgeBaseGroup { label: string; entries: KnowledgeBaseEntry[]; }
+interface ProjectItem { id: string; name: string; description: string; }
+interface DocumentItem { id: string; name: string; category: string; updated: string; }
+
 interface ActivityItem {
-  detail: string;
   id: string;
-  time: string;
   title: string;
+  time: string;
+  date: string;
 }
 
-interface DocumentItem {
-  category: DocumentCategory;
+interface ProfileModel {
   id: string;
   name: string;
-  updated: string;
+  emoji: string;
+  subtitle: string;
+  skills: string[];
+  focusAreas: string[];
+  projects: ProjectItem[];
+  documents: DocumentItem[];
+  knowledgeBase: KnowledgeBaseGroup[];
+  resume?: { name: string; updated: string };
+  experience: string;
+  lastUpdated: string;
+  health: number;
+  missingFields: string[];
 }
 
-interface NavItem {
-  id: TabId;
-  label: string;
-  icon: IconName;
-  status?: 'soon';
-}
-
-interface PersonaDraft {
-  focus: string;
+interface ProfileDraft {
   id?: string;
   name: string;
-  tags: string;
+  emoji: string;
+  subtitle: string;
+  skills: string;
+  focusAreas: string;
+  experience: string;
 }
 
-interface ToastState {
-  detail: string;
-  title: string;
-}
+/* ================================================================
+   INITIAL DATA
+   ================================================================ */
 
-const FORMFORGE_URL = 'https://formforge.app/';
-
-const navItems: NavItem[] = [
-  { id: 'home', label: 'Home', icon: 'dashboard' },
-  { id: 'personas', label: 'Personas', icon: 'persona' },
-  { id: 'vault', label: 'Vault', icon: 'shield' },
-  { id: 'analytics', label: 'Analytics', icon: 'analytics' },
-  { id: 'settings', label: 'Settings', icon: 'settings' },
+const KB_TEMPLATE: KnowledgeBaseGroup[] = [
+  {
+    label: 'Personal',
+    entries: [
+      { key: 'About Me', value: '' },
+      { key: 'Career Objective', value: '' },
+    ],
+  },
+  {
+    label: 'Professional',
+    entries: [
+      { key: 'Leadership', value: '' },
+      { key: 'Achievements', value: '' },
+      { key: 'Open Source', value: '' },
+    ],
+  },
+  {
+    label: 'Interview',
+    entries: [
+      { key: 'Strengths', value: '' },
+      { key: 'Weaknesses', value: '' },
+      { key: 'Preferred Stack', value: '' },
+    ],
+  },
 ];
 
-const initialPersonas: PersonaCardModel[] = [
+const initialProfiles: ProfileModel[] = [
   {
     id: 'ai-engineer',
     name: 'AI Engineer',
-    focus: 'ML platforms, LLM products, applied AI',
-    tags: ['Python', 'LLMs', 'MLOps'],
+    emoji: '🤖',
+    subtitle: 'Applied AI · LLM Engineering',
+    skills: ['Python', 'TensorFlow', 'PyTorch', 'LangChain', 'RAG', 'Docker', 'FastAPI', 'HuggingFace', 'CUDA', 'MLflow', 'Weights & Biases', 'OpenAI API', 'Pinecone', 'Redis', 'PostgreSQL', 'Kubernetes', 'AWS SageMaker', 'Transformers', 'ONNX', 'Streamlit', 'Gradio'],
+    focusAreas: ['Generative AI', 'LLMs', 'RAG', 'Computer Vision'],
+    projects: [
+      { id: 'p1', name: 'AI Interviewer', description: 'Real-time interview simulation with LLM feedback' },
+      { id: 'p2', name: 'SentinelAI', description: 'Automated threat detection using vision transformers' },
+      { id: 'p3', name: 'FormForge', description: 'Intelligent form autofill with persona-aware AI' },
+      { id: 'p4', name: 'DocuMind', description: 'RAG pipeline for internal document Q&A' },
+      { id: 'p5', name: 'EvalKit', description: 'LLM evaluation framework with custom metrics' },
+      { id: 'p6', name: 'VoiceClone', description: 'Zero-shot voice synthesis using diffusion models' },
+      { id: 'p7', name: 'CodeReview AI', description: 'Automated PR reviews with context-aware suggestions' },
+      { id: 'p8', name: 'DataForge', description: 'Synthetic data generation for ML training pipelines' },
+    ],
+    documents: [
+      { id: 'd1', name: 'AI_Resume.pdf', category: 'Resume', updated: 'Yesterday' },
+      { id: 'd2', name: 'TensorFlow_Certificate.pdf', category: 'Certificate', updated: '3 days ago' },
+      { id: 'd3', name: 'AWS_ML_Specialty.pdf', category: 'Certificate', updated: 'Last week' },
+      { id: 'd4', name: 'Cover_Letter_Google.pdf', category: 'Cover Letter', updated: 'Today' },
+      { id: 'd5', name: 'Research_Paper.pdf', category: 'Publication', updated: '2 weeks ago' },
+    ],
+    knowledgeBase: [
+      {
+        label: 'Personal',
+        entries: [
+          { key: 'About Me', value: 'Applied AI engineer building production LLM systems' },
+          { key: 'Career Objective', value: 'Lead AI infrastructure at a top-tier tech company' },
+        ],
+      },
+      {
+        label: 'Professional',
+        entries: [
+          { key: 'Leadership', value: 'Led 4-person ML team shipping RAG pipeline' },
+          { key: 'Achievements', value: 'Published 2 papers, 3x hackathon winner' },
+          { key: 'Open Source', value: 'Contributor to LangChain and HuggingFace' },
+        ],
+      },
+      {
+        label: 'Interview',
+        entries: [
+          { key: 'Strengths', value: 'System design, rapid prototyping, evaluation' },
+          { key: 'Weaknesses', value: 'Perfectionism in early-stage projects' },
+          { key: 'Preferred Stack', value: 'Python, FastAPI, PostgreSQL, Docker, AWS' },
+        ],
+      },
+    ],
+    resume: { name: 'AI_Resume.pdf', updated: 'Yesterday' },
+    experience: '2 Years',
+    lastUpdated: '3 hours ago',
+    health: 82,
+    missingFields: ['Portfolio', 'LinkedIn', 'Certifications Page'],
   },
   {
     id: 'software-engineer',
     name: 'Software Engineer',
-    focus: 'Frontend, backend, systems interviews',
-    tags: ['TypeScript', 'React', 'Node.js'],
+    emoji: '💻',
+    subtitle: 'Full Stack · Systems Design',
+    skills: ['TypeScript', 'React', 'Node.js', 'PostgreSQL', 'AWS', 'Docker', 'GraphQL', 'Next.js', 'Redis', 'Prisma', 'TailwindCSS', 'Jest'],
+    focusAreas: ['Backend Systems', 'API Design', 'Cloud Architecture'],
+    projects: [
+      { id: 'p1', name: 'FormForge', description: 'Browser extension for intelligent form autofill' },
+      { id: 'p2', name: 'TaskFlow', description: 'Real-time collaborative project management app' },
+      { id: 'p3', name: 'PayStream', description: 'Payment processing microservice with Stripe' },
+    ],
+    documents: [
+      { id: 'd1', name: 'SWE_Resume.pdf', category: 'Resume', updated: 'Today' },
+      { id: 'd2', name: 'AWS_Solutions_Architect.pdf', category: 'Certificate', updated: 'Last week' },
+    ],
+    knowledgeBase: KB_TEMPLATE,
+    resume: { name: 'SWE_Resume.pdf', updated: 'Today' },
+    experience: '3 Years',
+    lastUpdated: '1 day ago',
+    health: 64,
+    missingFields: ['Portfolio', 'GitHub', 'Cover Letter', 'About Me'],
   },
   {
     id: 'research',
     name: 'Research',
-    focus: 'Academic roles, papers, quantitative analysis',
-    tags: ['Papers', 'Statistics', 'Experiments'],
+    emoji: '🔬',
+    subtitle: 'Academic Research · Quantitative Analysis',
+    skills: ['Python', 'R', 'LaTeX', 'Statistics', 'MATLAB', 'Pandas', 'NumPy', 'Jupyter'],
+    focusAreas: ['Machine Learning Theory', 'Statistical Modeling', 'Experiment Design'],
+    projects: [
+      { id: 'p1', name: 'Attention Dynamics', description: 'Novel attention mechanism for long-context LLMs' },
+      { id: 'p2', name: 'BioStat Toolkit', description: 'Statistical analysis package for clinical trials' },
+    ],
+    documents: [
+      { id: 'd1', name: 'Academic_CV.pdf', category: 'Resume', updated: '2 days ago' },
+      { id: 'd2', name: 'Research_Statement.pdf', category: 'Statement', updated: 'Last week' },
+    ],
+    knowledgeBase: KB_TEMPLATE,
+    resume: { name: 'Academic_CV.pdf', updated: '2 days ago' },
+    experience: '4 Years',
+    lastUpdated: '2 days ago',
+    health: 55,
+    missingFields: ['Portfolio', 'GitHub', 'LinkedIn', 'Cover Letter', 'Achievements'],
   },
 ];
 
-const initialDocuments: DocumentItem[] = [
-  { id: 'd1', name: 'AI Engineer Resume.pdf', category: 'Resumes', updated: 'Today' },
-  { id: 'd2', name: 'Cloud Certificate.pdf', category: 'Certificates', updated: 'Yesterday' },
-  { id: 'd3', name: 'Offer Letter.pdf', category: 'Offer Letters', updated: 'May 18' },
-];
-
 const initialActivity: ActivityItem[] = [
-  { id: 'a1', title: 'Generated answers', detail: 'AI Engineer persona', time: '2m ago' },
-  { id: 'a2', title: 'Detected form fields', detail: '14 fields on current page', time: '8m ago' },
-  { id: 'a3', title: 'Synced persona data', detail: '3 personas available', time: 'Today' },
+  { id: 'a1', title: 'Filled Google Internship form', time: '12:42 PM', date: 'Today' },
+  { id: 'a2', title: 'Generated Cover Letter', time: '11:17 AM', date: 'Today' },
+  { id: 'a3', title: 'Updated AI Resume', time: '', date: 'Yesterday' },
+  { id: 'a4', title: 'Uploaded TensorFlow Certificate', time: '', date: 'Yesterday' },
+  { id: 'a5', title: 'Analyzed LinkedIn job page', time: '', date: '2 days ago' },
 ];
 
-const vaultValues = [
-  { label: 'Phone Number', value: '+91 98765 43210' },
+const vaultEntries = [
+  { label: 'Phone', value: '+91 98765 43210' },
   { label: 'Address', value: 'Bengaluru, Karnataka' },
   { label: 'Aadhaar', value: '1234 5678 9012' },
   { label: 'PAN', value: 'ABCDE1234F' },
   { label: 'Passport', value: 'M1234567' },
+  { label: 'SSN', value: '***-**-6789' },
 ];
 
-const assistantCopy: Record<AssistantMode, { label: string; response: string }> = {
-  answers: {
-    label: 'Application Answers',
-    response:
-      'I build production-grade AI systems that connect model quality with reliable product behavior. My recent work spans retrieval pipelines, evaluation workflows, and developer tooling for shipping applied AI features safely.',
-  },
-  projects: {
-    label: 'Project Descriptions',
-    response:
-      'Built a role-aware application assistant that maps form fields to persona context, generates tailored answers, and keeps sensitive identity fields locked until verification.',
-  },
-  summaries: {
-    label: 'Professional Summary',
-    response:
-      'Applied AI engineer with experience turning model workflows into reliable user-facing products, with strengths across TypeScript interfaces, automation, retrieval systems, and evaluation.',
-  },
-};
+const FORMFORGE_URL = 'https://formforge.app/';
 
-const featureDetails: Record<Exclude<TabId, 'home' | 'personas' | 'assistant' | 'vault' | 'documents' | 'analytics' | 'settings'>, {
-  description: string;
-  title: string;
-}> = {
-  autofill: {
-    title: 'Autofill Rules',
-    description: 'Create site-specific field rules, fallback values, and confidence thresholds.',
-  },
-  templates: {
-    title: 'Templates',
-    description: 'Reusable answer blocks, project examples, cover letter snippets, and recruiter notes.',
-  },
-  integrations: {
-    title: 'Integrations',
-    description: 'Connect FormForge to job boards, cloud drives, applicant trackers, and the web dashboard.',
-  },
-  team: {
-    title: 'Team',
-    description: 'Shared persona libraries, approval workflows, and organization-level vault policies.',
-  },
-};
-
-const emptyPersonaDraft: PersonaDraft = {
-  focus: '',
+const emptyDraft: ProfileDraft = {
   name: '',
-  tags: '',
+  emoji: '👤',
+  subtitle: '',
+  skills: '',
+  focusAreas: '',
+  experience: '',
 };
+
+/* ================================================================
+   MAIN COMPONENT
+   ================================================================ */
 
 const Popup: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId>('home');
+  const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>('overview');
   const [theme, setTheme] = useState<ThemeMode>('dark');
-  const [personas, setPersonas] = useState<PersonaCardModel[]>(initialPersonas);
-  const [activePersonaId, setActivePersonaId] = useState(initialPersonas[0].id);
-  const [documents, setDocuments] = useState<DocumentItem[]>(initialDocuments);
+  const [profiles, setProfiles] = useState<ProfileModel[]>(initialProfiles);
+  const [activeProfileId, setActiveProfileId] = useState(initialProfiles[0].id);
   const [activity, setActivity] = useState<ActivityItem[]>(initialActivity);
-  const [assistantMode, setAssistantMode] = useState<AssistantMode>('answers');
-  const [assistantResponse, setAssistantResponse] = useState(assistantCopy.answers.response);
-  const [selectedDocumentId, setSelectedDocumentId] = useState(initialDocuments[0].id);
   const [vaultUnlocked, setVaultUnlocked] = useState(false);
-  const [securityEnabled, setSecurityEnabled] = useState(true);
-  const [websiteIntegration, setWebsiteIntegration] = useState(true);
-  const [aiTone, setAiTone] = useState<AiTone>('Professional');
-  const [applicationsFilled, setApplicationsFilled] = useState(128);
-  const [responsesGenerated, setResponsesGenerated] = useState(416);
-  const [personaQuery, setPersonaQuery] = useState('');
-  const [documentQuery, setDocumentQuery] = useState('');
-  const [personaDraft, setPersonaDraft] = useState<PersonaDraft>(emptyPersonaDraft);
-  const [isPersonaModalOpen, setIsPersonaModalOpen] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [toast, setToast] = useState<ToastState>({
-    title: 'Ready',
-    detail: 'FormForge popup is active.',
-  });
-
-  const activePersona = useMemo(
-    () => personas.find((persona) => persona.id === activePersonaId) || personas[0],
-    [activePersonaId, personas],
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [draft, setDraft] = useState<ProfileDraft>(emptyDraft);
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(['resume', 'stats', 'focus', 'kb', 'ai']),
   );
 
-  const selectedDocument = useMemo(
-    () => documents.find((document) => document.id === selectedDocumentId) || documents[0],
-    [documents, selectedDocumentId],
+  // Derived
+  const activeProfile = useMemo(
+    () => profiles.find((p) => p.id === activeProfileId) ?? profiles[0],
+    [activeProfileId, profiles],
   );
 
-  const filteredPersonas = useMemo(() => {
-    const query = personaQuery.trim().toLowerCase();
-    if (!query) {
-      return personas;
-    }
+  const formsFilled = 128;
+  const aiResponses = 416;
+  const timeSaved = '24h';
 
-    return personas.filter((persona) =>
-      [persona.name, persona.focus, ...persona.tags].some((value) => value.toLowerCase().includes(query)),
-    );
-  }, [personaQuery, personas]);
-
-  const filteredDocuments = useMemo(() => {
-    const query = documentQuery.trim().toLowerCase();
-    if (!query) {
-      return documents;
-    }
-
-    return documents.filter((document) =>
-      [document.name, document.category, document.updated].some((value) => value.toLowerCase().includes(query)),
-    );
-  }, [documentQuery, documents]);
-
-  const addActivity = (title: string, detail: string) => {
-    setActivity((current) => [
-      { id: `${Date.now()}-${title}`, title, detail, time: 'Just now' },
-      ...current.slice(0, 4),
+  // Actions
+  const addActivity = (title: string) => {
+    setActivity((prev) => [
+      { id: `${Date.now()}`, title, time: 'Just now', date: 'Today' },
+      ...prev.slice(0, 6),
     ]);
-    setToast({ title, detail });
   };
 
-  const openWebsite = (label = 'Opened FormForge') => {
-    addActivity(label, 'Redirecting to formforge.app');
+  const selectProfile = (id: string) => {
+    setActiveProfileId(id);
+    setActiveTab('profileWorkspace');
+    setWorkspaceTab('overview');
+    addActivity(`Switched to ${profiles.find((p) => p.id === id)?.name ?? 'profile'}`);
+  };
 
+  const openWebsite = () => {
     if (typeof chrome !== 'undefined' && chrome.tabs?.create) {
       chrome.tabs.create({ url: FORMFORGE_URL });
       return;
     }
-
     window.open(FORMFORGE_URL, '_blank', 'noopener,noreferrer');
   };
 
-  const handleSync = () => {
-    setIsSyncing(true);
-    window.setTimeout(() => {
-      setIsSyncing(false);
-      addActivity('Synced workspace', 'Personas, documents, and settings are up to date');
-    }, 700);
+  const openCreateModal = () => {
+    setDraft(emptyDraft);
+    setModalOpen(true);
   };
 
-  const handleQuickAction = (action: 'fill' | 'analyze' | 'generate' | 'upload') => {
-    if (action === 'fill') {
-      setApplicationsFilled((count) => count + 1);
-      addActivity('Filled current form', `${activePersona.name} mapped to 14 fields`);
-      return;
-    }
-
-    if (action === 'analyze') {
-      addActivity('Analyzed form', 'Detected application form with high confidence');
-      return;
-    }
-
-    if (action === 'generate') {
-      setActiveTab('assistant');
-      handleAssistantGenerate('answers');
-      return;
-    }
-
-    setActiveTab('documents');
-    addActivity('Opened upload workflow', 'Document library is ready for a new file');
-  };
-
-  const handleAssistantGenerate = (mode: AssistantMode) => {
-    setAssistantMode(mode);
-    setAssistantResponse(assistantCopy[mode].response);
-    setResponsesGenerated((count) => count + 1);
-    addActivity(assistantCopy[mode].label, `${activePersona.name} - ${aiTone.toLowerCase()} tone`);
-  };
-
-  const openPersonaModal = (persona?: PersonaCardModel) => {
-    setPersonaDraft(
-      persona
-        ? {
-            id: persona.id,
-            name: persona.name,
-            focus: persona.focus,
-            tags: persona.tags.join(', '),
-          }
-        : emptyPersonaDraft,
-    );
-    setIsPersonaModalOpen(true);
-  };
-
-  const handleSavePersona = () => {
-    const tags = personaDraft.tags
-      .split(',')
-      .map((tag) => tag.trim())
-      .filter(Boolean);
-    const persona: PersonaCardModel = {
-      id: personaDraft.id || `persona-${Date.now()}`,
-      name: personaDraft.name.trim() || 'Untitled Persona',
-      focus: personaDraft.focus.trim() || 'Custom application profile',
-      tags: tags.length ? tags : ['Custom'],
-    };
-
-    setPersonas((current) => {
-      if (personaDraft.id) {
-        return current.map((item) => (item.id === personaDraft.id ? persona : item));
-      }
-
-      return [...current, persona];
+  const openEditModal = (profile: ProfileModel) => {
+    setDraft({
+      id: profile.id,
+      name: profile.name,
+      emoji: profile.emoji,
+      subtitle: profile.subtitle,
+      skills: profile.skills.join(', '),
+      focusAreas: profile.focusAreas.join(', '),
+      experience: profile.experience,
     });
-    setActivePersonaId(persona.id);
-    setIsPersonaModalOpen(false);
-    addActivity(personaDraft.id ? 'Updated persona' : 'Created persona', persona.name);
+    setModalOpen(true);
   };
 
-  const handleDeletePersona = (personaId: string) => {
-    setPersonas((current) => {
-      if (current.length === 1) {
-        addActivity('Persona retained', 'At least one persona is required');
-        return current;
-      }
+  const saveProfile = () => {
+    const skills = draft.skills.split(',').map((s) => s.trim()).filter(Boolean);
+    const focusAreas = draft.focusAreas.split(',').map((s) => s.trim()).filter(Boolean);
 
-      const next = current.filter((persona) => persona.id !== personaId);
-      if (activePersonaId === personaId) {
-        setActivePersonaId(next[0].id);
+    if (draft.id) {
+      setProfiles((prev) =>
+        prev.map((p) =>
+          p.id === draft.id
+            ? { ...p, name: draft.name || p.name, emoji: draft.emoji || p.emoji, subtitle: draft.subtitle || p.subtitle, skills: skills.length ? skills : p.skills, focusAreas: focusAreas.length ? focusAreas : p.focusAreas, experience: draft.experience || p.experience }
+            : p,
+        ),
+      );
+      addActivity(`Updated ${draft.name}`);
+    } else {
+      const newProfile: ProfileModel = {
+        id: `profile-${Date.now()}`,
+        name: draft.name || 'New Profile',
+        emoji: draft.emoji || '👤',
+        subtitle: draft.subtitle || 'Custom profile',
+        skills: skills.length ? skills : ['Custom'],
+        focusAreas: focusAreas.length ? focusAreas : ['General'],
+        projects: [],
+        documents: [],
+        knowledgeBase: KB_TEMPLATE,
+        experience: draft.experience || '0 Years',
+        lastUpdated: 'Just now',
+        health: 20,
+        missingFields: ['Resume', 'Portfolio', 'LinkedIn', 'GitHub', 'Cover Letter'],
+      };
+      setProfiles((prev) => [...prev, newProfile]);
+      setActiveProfileId(newProfile.id);
+      setActiveTab('profileWorkspace');
+      addActivity(`Created ${newProfile.name}`);
+    }
+    setModalOpen(false);
+  };
+
+  const deleteProfile = (id: string) => {
+    if (profiles.length <= 1) {
+      addActivity('Cannot delete last profile');
+      return;
+    }
+    setProfiles((prev) => {
+      const next = prev.filter((p) => p.id !== id);
+      if (activeProfileId === id) {
+        setActiveProfileId(next[0].id);
+        setActiveTab('home');
       }
       return next;
     });
-    addActivity('Deleted persona', 'Persona list updated');
+    addActivity('Deleted profile');
   };
 
-  const handleUploadDocument = () => {
-    const nextNumber = documents.length + 1;
-    const document: DocumentItem = {
+  const uploadDocument = () => {
+    const doc: DocumentItem = {
       id: `doc-${Date.now()}`,
-      name: `Uploaded Resume ${nextNumber}.pdf`,
-      category: 'Resumes',
+      name: `Uploaded_${Date.now()}.pdf`,
+      category: 'Resume',
       updated: 'Just now',
     };
-
-    setDocuments((current) => [document, ...current]);
-    setSelectedDocumentId(document.id);
-    addActivity('Uploaded document', document.name);
+    setProfiles((prev) =>
+      prev.map((p) => (p.id === activeProfileId ? { ...p, documents: [doc, ...p.documents] } : p)),
+    );
+    addActivity('Uploaded document');
   };
 
-  const handleDeleteDocument = (documentId: string) => {
-    setDocuments((current) => {
-      const next = current.filter((document) => document.id !== documentId);
-      setSelectedDocumentId(next[0]?.id || '');
+  const deleteDocument = (docId: string) => {
+    setProfiles((prev) =>
+      prev.map((p) =>
+        p.id === activeProfileId ? { ...p, documents: p.documents.filter((d) => d.id !== docId) } : p,
+      ),
+    );
+    addActivity('Deleted document');
+  };
+
+  const toggleSection = (key: string) => {
+    setExpandedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
       return next;
     });
-    addActivity('Deleted document', 'Document library updated');
   };
+
+  const handleAiCommand = (cmd: string) => {
+    addActivity(cmd);
+  };
+
+  /* ============================================================
+     RENDER
+     ============================================================ */
 
   return (
     <div className="ff-popup" data-theme={theme}>
+      {/* HEADER */}
       <header className="ff-header">
         <div className="ff-brand">
           <div className="ff-logo" aria-hidden="true">F</div>
-          <div>
-            <h1>FormForge</h1>
-            <p>{toast.title}: {toast.detail}</p>
-          </div>
+          <span className="ff-brand-name">FormForge</span>
         </div>
-        <div className="ff-header-actions">
-          <Button icon="theme" onClick={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} variant="ghost">
-            Theme
-          </Button>
-          <Button icon="globe" onClick={() => openWebsite()} variant="ghost">
-            Web
-          </Button>
+        <div className="ff-header-right">
+          <span className="ff-sync-label">Synced just now</span>
+          <button className="ff-header-btn" onClick={openWebsite} type="button">
+            Dashboard <Icon name="external" />
+          </button>
+          <button
+            className="ff-header-btn"
+            onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+            type="button"
+            title="Toggle theme"
+          >
+            <Icon name="theme" />
+          </button>
+          <div style={{ position: 'relative' }}>
+            <button className="ff-avatar-btn" onClick={() => setUserMenuOpen((v) => !v)} type="button" title="User menu">
+              <Icon name="persona" />
+            </button>
+            {userMenuOpen && (
+              <div className="ff-user-menu">
+                <button className="ff-menu-item" onClick={() => { openWebsite(); setUserMenuOpen(false); }} type="button">
+                  <Icon name="external" /> Dashboard
+                </button>
+                <button className="ff-menu-item" onClick={() => { openWebsite(); setUserMenuOpen(false); }} type="button">
+                  <Icon name="persona" /> Manage Account
+                </button>
+                <button className="ff-menu-item" onClick={() => { addActivity('Synced workspace'); setUserMenuOpen(false); }} type="button">
+                  <Icon name="import" /> Sync Now
+                </button>
+                <div className="ff-menu-divider" />
+                <button className="ff-menu-item" onClick={() => { openWebsite(); setUserMenuOpen(false); }} type="button">
+                  <Icon name="globe" /> Website
+                </button>
+                <button className="ff-menu-item" onClick={() => setUserMenuOpen(false)} type="button">
+                  <Icon name="back" /> Sign Out
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
       <div className="ff-body">
-        <aside className="ff-sidebar" aria-label="Popup navigation">
-          <div className="ff-nav-section">
-            {navItems.map((item) => (
+        {/* SIDEBAR */}
+        <aside className="ff-sidebar">
+          <div className="ff-sidebar-section">
+            <button
+              className={`ff-nav-item ${activeTab === 'home' ? 'is-active' : ''}`}
+              onClick={() => setActiveTab('home')}
+              type="button"
+            >
+              <Icon name="dashboard" /> Home
+            </button>
+          </div>
+
+          <div className="ff-sidebar-divider" />
+
+          <div className="ff-sidebar-section">
+            <div className="ff-section-label">Profiles</div>
+            {profiles.map((p) => (
               <button
-                className={`ff-nav-item ${activeTab === item.id ? 'is-active' : ''}`}
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                className={`ff-profile-row ${activeTab === 'profileWorkspace' && activeProfileId === p.id ? 'is-active' : ''}`}
+                key={p.id}
+                onClick={() => selectProfile(p.id)}
                 type="button"
               >
-                <Icon name={item.icon} />
-                <span>{item.label}</span>
-                {item.status === 'soon' && <Badge>Soon</Badge>}
+                <span className="ff-profile-emoji">{p.emoji}</span>
+                <span>{p.name}</span>
+                <span className={`ff-profile-dot ${activeProfileId === p.id ? '' : 'is-inactive'}`} />
               </button>
             ))}
+            <button className="ff-new-profile-btn" onClick={openCreateModal} type="button">
+              <Icon name="plus" /> New Profile
+            </button>
           </div>
-          <div className="ff-sidebar-footer">
-            <Button icon="import" isLoading={isSyncing} onClick={handleSync} variant="secondary">
-              Sync
-            </Button>
+
+          <div className="ff-sidebar-divider" />
+
+          <div className="ff-sidebar-section">
+            <button
+              className={`ff-nav-item ${activeTab === 'vault' ? 'is-active' : ''}`}
+              onClick={() => setActiveTab('vault')}
+              type="button"
+            >
+              <Icon name="shield" /> Vault
+            </button>
+            <button
+              className={`ff-nav-item ${activeTab === 'analytics' ? 'is-active' : ''}`}
+              onClick={() => setActiveTab('analytics')}
+              type="button"
+            >
+              <Icon name="analytics" /> Analytics
+            </button>
+            <button
+              className={`ff-nav-item ${activeTab === 'settings' ? 'is-active' : ''}`}
+              onClick={() => setActiveTab('settings')}
+              type="button"
+            >
+              <Icon name="settings" /> Settings
+            </button>
           </div>
         </aside>
 
-        <main className="ff-main">
-          {activeTab === 'home' && (
-            <HomeTab
-              activePersona={activePersona}
-              activity={activity}
-              isSyncing={isSyncing}
-              onOpenWebsite={openWebsite}
-              onQuickAction={handleQuickAction}
-              onSync={handleSync}
-            />
+        {/* MAIN CONTENT */}
+        <main className="ff-main" onClick={() => userMenuOpen && setUserMenuOpen(false)}>
+          {profiles.length === 0 ? (
+            <OnboardingScreen onCreate={openCreateModal} />
+          ) : (
+            <>
+              {activeTab === 'home' && (
+                <HomeTab
+                  activeProfile={activeProfile}
+                  activity={activity}
+                  formsFilled={formsFilled}
+                  aiResponses={aiResponses}
+                  timeSaved={timeSaved}
+                  onSelectProfile={() => selectProfile(activeProfile.id)}
+                  onFill={() => addActivity('Filled current form')}
+                  onAnalyze={() => addActivity('Analyzed page')}
+                  onGenerate={() => addActivity('Generated answers')}
+                />
+              )}
+              {activeTab === 'profileWorkspace' && (
+                <ProfileWorkspace
+                  profile={activeProfile}
+                  workspaceTab={workspaceTab}
+                  onTabChange={setWorkspaceTab}
+                  expandedSections={expandedSections}
+                  onToggleSection={toggleSection}
+                  onEdit={() => openEditModal(activeProfile)}
+                  onDelete={() => deleteProfile(activeProfile.id)}
+                  onUploadDoc={uploadDocument}
+                  onDeleteDoc={deleteDocument}
+                  onAiCommand={handleAiCommand}
+                />
+              )}
+              {activeTab === 'vault' && (
+                <VaultTab
+                  unlocked={vaultUnlocked}
+                  onToggle={() => {
+                    setVaultUnlocked((v) => !v);
+                    addActivity(vaultUnlocked ? 'Locked vault' : 'Unlocked vault');
+                  }}
+                />
+              )}
+              {activeTab === 'analytics' && (
+                <AnalyticsTab
+                  formsFilled={formsFilled}
+                  responsesGenerated={aiResponses}
+                  profileCount={profiles.length}
+                />
+              )}
+              {activeTab === 'settings' && (
+                <SettingsTab
+                  theme={theme}
+                  onThemeChange={(t) => { setTheme(t); addActivity(`Theme: ${t}`); }}
+                  onOpenWebsite={openWebsite}
+                />
+              )}
+            </>
           )}
-          {activeTab === 'personas' && (
-            <PersonasTab
-              activePersonaId={activePersonaId}
-              filteredPersonas={filteredPersonas}
-              onCreate={() => openPersonaModal()}
-              onDelete={handleDeletePersona}
-              onEdit={openPersonaModal}
-              onQueryChange={setPersonaQuery}
-              onSelect={(persona) => {
-                setActivePersonaId(persona.id);
-                addActivity('Switched persona', persona.name);
-              }}
-              query={personaQuery}
-            />
-          )}
-          {activeTab === 'assistant' && (
-            <AssistantTab
-              activePersona={activePersona}
-              aiTone={aiTone}
-              assistantMode={assistantMode}
-              response={assistantResponse}
-              onGenerate={handleAssistantGenerate}
-            />
-          )}
-          {activeTab === 'vault' && (
-            <VaultTab
-              securityEnabled={securityEnabled}
-              vaultUnlocked={vaultUnlocked}
-              onToggleVault={() => {
-                setVaultUnlocked((current) => !current);
-                addActivity(vaultUnlocked ? 'Locked vault' : 'Unlocked vault', 'Sensitive fields updated');
-              }}
-            />
-          )}
-          {activeTab === 'documents' && (
-            <DocumentsTab
-              documents={filteredDocuments}
-              onDelete={handleDeleteDocument}
-              onQueryChange={setDocumentQuery}
-              onUpload={handleUploadDocument}
-              onView={(document) => {
-                setSelectedDocumentId(document.id);
-                addActivity('Viewed document', document.name);
-              }}
-              query={documentQuery}
-              selectedDocument={selectedDocument}
-            />
-          )}
-          {activeTab === 'analytics' && (
-            <AnalyticsTab
-              applicationsFilled={applicationsFilled}
-              personasCreated={personas.length}
-              responsesGenerated={responsesGenerated}
-            />
-          )}
-          {activeTab === 'settings' && (
-            <SettingsTab
-              aiTone={aiTone}
-              securityEnabled={securityEnabled}
-              theme={theme}
-              websiteIntegration={websiteIntegration}
-              onAiToneChange={(tone) => {
-                setAiTone(tone);
-                addActivity('Updated AI tone', `${tone} tone selected`);
-              }}
-              onOpenWebsite={openWebsite}
-              onSecurityChange={(enabled) => {
-                setSecurityEnabled(enabled);
-                if (!enabled) {
-                  setVaultUnlocked(false);
-                }
-                addActivity('Updated security', enabled ? 'Vault security enabled' : 'Vault security disabled');
-              }}
-              onThemeChange={(mode) => {
-                setTheme(mode);
-                addActivity('Changed theme', `${mode === 'dark' ? 'Dark' : 'Light'} mode enabled`);
-              }}
-              onWebsiteIntegrationChange={(enabled) => {
-                setWebsiteIntegration(enabled);
-                addActivity('Website integration', enabled ? 'Integration enabled' : 'Integration paused');
-              }}
-            />
-          )}
-          {isFutureTab(activeTab) && <FutureFeatureTab feature={featureDetails[activeTab]} onOpenWebsite={openWebsite} />}
         </main>
       </div>
 
-      <Modal
-        isOpen={isPersonaModalOpen}
-        onClose={() => setIsPersonaModalOpen(false)}
-        title={personaDraft.id ? 'Edit Persona' : 'Create Persona'}
-      >
-        <div className="ff-form-grid">
-          <Input
-            label="Name"
-            onChange={(value) => setPersonaDraft((current) => ({ ...current, name: value }))}
-            placeholder="Product Engineer"
-            value={personaDraft.name}
-          />
-          <Input
-            label="Focus"
-            onChange={(value) => setPersonaDraft((current) => ({ ...current, focus: value }))}
-            placeholder="Frontend, product systems, design engineering"
-            value={personaDraft.focus}
-          />
-          <Input
-            label="Tags"
-            onChange={(value) => setPersonaDraft((current) => ({ ...current, tags: value }))}
-            placeholder="React, UX, TypeScript"
-            value={personaDraft.tags}
-          />
-          <div className="ff-form-actions">
-            <Button onClick={() => setIsPersonaModalOpen(false)} variant="secondary">
-              Cancel
-            </Button>
-            <Button icon="check" onClick={handleSavePersona} variant="primary">
-              Save Persona
-            </Button>
+      {/* MODAL */}
+      {modalOpen && (
+        <div className="ff-modal-backdrop" onClick={() => setModalOpen(false)}>
+          <div className="ff-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="ff-modal-header">
+              <span className="ff-modal-title">{draft.id ? 'Edit Profile' : 'Create Profile'}</span>
+              <button className="ff-btn ff-btn-ghost ff-btn-sm" onClick={() => setModalOpen(false)} type="button">Close</button>
+            </div>
+            <div className="ff-modal-body">
+              <div className="ff-field">
+                <span className="ff-field-label">Emoji</span>
+                <input value={draft.emoji} onChange={(e) => setDraft((d) => ({ ...d, emoji: e.target.value }))} placeholder="👤" />
+              </div>
+              <div className="ff-field">
+                <span className="ff-field-label">Name</span>
+                <input value={draft.name} onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))} placeholder="AI Engineer" />
+              </div>
+              <div className="ff-field">
+                <span className="ff-field-label">Subtitle</span>
+                <input value={draft.subtitle} onChange={(e) => setDraft((d) => ({ ...d, subtitle: e.target.value }))} placeholder="Applied AI · LLM Engineering" />
+              </div>
+              <div className="ff-field">
+                <span className="ff-field-label">Skills (comma-separated)</span>
+                <input value={draft.skills} onChange={(e) => setDraft((d) => ({ ...d, skills: e.target.value }))} placeholder="Python, React, Docker" />
+              </div>
+              <div className="ff-field">
+                <span className="ff-field-label">Focus Areas (comma-separated)</span>
+                <input value={draft.focusAreas} onChange={(e) => setDraft((d) => ({ ...d, focusAreas: e.target.value }))} placeholder="Generative AI, Backend" />
+              </div>
+              <div className="ff-field">
+                <span className="ff-field-label">Experience</span>
+                <input value={draft.experience} onChange={(e) => setDraft((d) => ({ ...d, experience: e.target.value }))} placeholder="2 Years" />
+              </div>
+              <div className="ff-form-actions">
+                <button className="ff-btn" onClick={() => setModalOpen(false)} type="button">Cancel</button>
+                <button className="ff-btn ff-btn-primary" onClick={saveProfile} type="button">
+                  <Icon name="check" /> Save
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </Modal>
+      )}
     </div>
   );
 };
 
-const isFutureTab = (
-  tab: TabId,
-): tab is Exclude<TabId, 'home' | 'personas' | 'assistant' | 'vault' | 'documents' | 'analytics' | 'settings'> =>
-  tab === 'autofill' || tab === 'templates' || tab === 'integrations' || tab === 'team';
+/* ================================================================
+   ONBOARDING
+   ================================================================ */
+
+const OnboardingScreen: React.FC<{ onCreate: () => void }> = ({ onCreate }) => (
+  <div className="ff-onboarding">
+    <div className="ff-onboarding-icon"><Icon name="persona" /></div>
+    <h2>Welcome to FormForge</h2>
+    <p>No profiles found. Create your first profile to start autofilling applications with AI.</p>
+    <div className="ff-onboarding-actions">
+      <button className="ff-btn ff-btn-primary" onClick={onCreate} type="button">
+        <Icon name="plus" /> Create Profile
+      </button>
+      <button className="ff-btn" type="button">
+        <Icon name="upload" /> Import Resume
+      </button>
+    </div>
+  </div>
+);
+
+/* ================================================================
+   HOME TAB — THE LAUNCHPAD
+   ================================================================ */
 
 interface HomeTabProps {
-  activePersona?: PersonaCardModel;
+  activeProfile: ProfileModel;
   activity: ActivityItem[];
-  isSyncing: boolean;
-  onOpenWebsite: (label?: string) => void;
-  onQuickAction: (action: 'fill' | 'analyze' | 'generate' | 'upload') => void;
-  onSync: () => void;
+  formsFilled: number;
+  aiResponses: number;
+  timeSaved: string;
+  onSelectProfile: () => void;
+  onFill: () => void;
+  onAnalyze: () => void;
+  onGenerate: () => void;
 }
 
-const HomeTab: React.FC<HomeTabProps> = ({ activePersona, activity, isSyncing, onOpenWebsite, onQuickAction, onSync }) => (
-  <TabFrame
-    eyebrow="Home"
-    title="Application automation, organized."
-    description="A compact command center for filling forms, managing personas, and preparing responses."
-    actions={
-      <div className="ff-hero-actions">
-        <Button icon="globe" onClick={() => onOpenWebsite('Opened dashboard')} variant="secondary">
-          Open Dashboard
-        </Button>
-        <Button icon="import" isLoading={isSyncing} onClick={onSync} variant="primary">
-          Sync Personas
-        </Button>
-      </div>
-    }
-  >
-    <div className="ff-dashboard-grid">
-      <Card icon="persona" title="Current Persona">
-        {activePersona ? (
-          <>
-            <div className="ff-persona-summary">
-              <div>
-                <strong>{activePersona.name}</strong>
-                <span>{activePersona.focus}</span>
-              </div>
-              <Badge tone="success">Active</Badge>
-            </div>
-            <TagList tags={activePersona.tags} />
-          </>
-        ) : (
-          <EmptyState detail="Create a persona to start using FormForge." title="No persona selected" />
-        )}
-      </Card>
+const HomeTab: React.FC<HomeTabProps> = ({
+  activeProfile, activity, formsFilled, aiResponses, timeSaved,
+  onSelectProfile, onFill, onAnalyze, onGenerate,
+}) => {
+  const groupedActivity = useMemo(() => {
+    const groups: { date: string; items: ActivityItem[] }[] = [];
+    activity.forEach((item) => {
+      const existing = groups.find((g) => g.date === item.date);
+      if (existing) existing.items.push(item);
+      else groups.push({ date: item.date, items: [item] });
+    });
+    return groups;
+  }, [activity]);
 
-      <Card icon="status" title="Form Detection">
-        <StatusRow label="Current page" tone="success" value="Application form detected" />
-        <StatusRow label="Fields mapped" value="14 fields" />
-        <StatusRow label="Confidence" value="High" />
-      </Card>
+  return (
+    <div>
+      <div className="ff-page-title">Home</div>
 
-      <Card className="ff-span-2" icon="dashboard" title="Quick Actions">
-        <div className="ff-action-grid">
-          <Button icon="check" onClick={() => onQuickAction('fill')} variant="action">
-            Fill Current Form
-          </Button>
-          <Button icon="analyze" onClick={() => onQuickAction('analyze')} variant="action">
-            Analyze Form
-          </Button>
-          <Button icon="spark" onClick={() => onQuickAction('generate')} variant="action">
-            Generate Answers
-          </Button>
-          <Button icon="upload" onClick={() => onQuickAction('upload')} variant="action">
-            Upload Resume
-          </Button>
+      {/* Ready to Fill Banner */}
+      <div className="ff-fill-banner is-ready">
+        <div className="ff-banner-status">
+          <span className="ff-banner-dot" />
+          Ready to Autofill
         </div>
-      </Card>
-
-      <Card className="ff-span-2" icon="analytics" title="Recent Activity">
-        <ActivityList activity={activity} />
-      </Card>
-    </div>
-  </TabFrame>
-);
-
-interface PersonasTabProps {
-  activePersonaId: string;
-  filteredPersonas: PersonaCardModel[];
-  onCreate: () => void;
-  onDelete: (personaId: string) => void;
-  onEdit: (persona: PersonaCardModel) => void;
-  onQueryChange: (value: string) => void;
-  onSelect: (persona: PersonaCardModel) => void;
-  query: string;
-}
-
-const PersonasTab: React.FC<PersonasTabProps> = ({
-  activePersonaId,
-  filteredPersonas,
-  onCreate,
-  onDelete,
-  onEdit,
-  onQueryChange,
-  onSelect,
-  query,
-}) => (
-  <TabFrame
-    eyebrow="Personas"
-    title="Role-specific application profiles."
-    description="Maintain separate positioning, skills, and documents for each target role."
-    actions={<Button icon="plus" onClick={onCreate} variant="primary">Create Persona</Button>}
-  >
-    <div className="ff-toolbar">
-      <SearchBar onChange={onQueryChange} placeholder="Search personas" value={query} />
-    </div>
-    <div className="ff-persona-list">
-      {filteredPersonas.length === 0 ? (
-        <Card>
-          <EmptyState detail="Try a different search or create a new persona." title="No personas found" />
-        </Card>
-      ) : (
-        filteredPersonas.map((persona) => (
-          <PersonaCard
-            isActive={persona.id === activePersonaId}
-            key={persona.id}
-            onDelete={() => onDelete(persona.id)}
-            onEdit={() => onEdit(persona)}
-            onSelect={() => onSelect(persona)}
-            persona={persona}
-          />
-        ))
-      )}
-    </div>
-  </TabFrame>
-);
-
-interface AssistantTabProps {
-  activePersona?: PersonaCardModel;
-  aiTone: AiTone;
-  assistantMode: AssistantMode;
-  response: string;
-  onGenerate: (mode: AssistantMode) => void;
-}
-
-const AssistantTab: React.FC<AssistantTabProps> = ({ activePersona, aiTone, assistantMode, response, onGenerate }) => (
-  <TabFrame
-    eyebrow="AI Assistant"
-    title="Draft application-ready responses."
-    description="Generate concise answers from the selected persona and saved documents."
-  >
-    <div className="ff-assistant-grid">
-      <Card icon="spark" title="Tools">
-        <div className="ff-stack">
-          <Button icon="arrow-right" onClick={() => onGenerate('answers')} variant="action">
-            Generate Application Answers
-          </Button>
-          <Button icon="arrow-right" onClick={() => onGenerate('projects')} variant="action">
-            Project Descriptions
-          </Button>
-          <Button icon="arrow-right" onClick={() => onGenerate('summaries')} variant="action">
-            Professional Summaries
-          </Button>
-        </div>
-      </Card>
-
-      <Card icon="file" title="Response Area">
-        <div className="ff-response-box">
-          <div className="ff-response-toolbar">
-            <Badge>{activePersona?.name || 'No persona'}</Badge>
-            <Badge>{assistantCopy[assistantMode].label}</Badge>
-            <span>{aiTone} tone</span>
+        <div className="ff-banner-meta">
+          <div className="ff-banner-row">
+            <span>Website</span>
+            <span>linkedin.com/jobs</span>
           </div>
-          <textarea aria-label="Generated response" className="ff-response-textarea" readOnly value={response} />
-        </div>
-      </Card>
-    </div>
-  </TabFrame>
-);
-
-interface VaultTabProps {
-  securityEnabled: boolean;
-  vaultUnlocked: boolean;
-  onToggleVault: () => void;
-}
-
-const VaultTab: React.FC<VaultTabProps> = ({ securityEnabled, vaultUnlocked, onToggleVault }) => (
-  <TabFrame
-    eyebrow="Vault"
-    title="Sensitive details stay protected."
-    description="Identity and personal records are hidden until verification is complete."
-    actions={
-      <Button icon={vaultUnlocked ? 'shield' : 'unlock'} onClick={onToggleVault} variant="primary">
-        {vaultUnlocked ? 'Lock Vault' : 'Unlock Vault'}
-      </Button>
-    }
-  >
-    <Card icon="shield" title={vaultUnlocked ? 'Unlocked Fields' : 'Locked Fields'}>
-      <div className="ff-vault-grid">
-        {vaultValues.map((item) => (
-          <div className="ff-vault-item" key={item.label}>
-            <Icon name={vaultUnlocked ? 'unlock' : 'shield'} />
-            <span>{item.label}</span>
-            <strong>{vaultUnlocked && securityEnabled ? item.value : 'Locked'}</strong>
+          <div className="ff-banner-row">
+            <span>Using</span>
+            <span>{activeProfile.emoji} {activeProfile.name}</span>
           </div>
-        ))}
+          <div className="ff-banner-row">
+            <span>Fields detected</span>
+            <span>12 fields</span>
+          </div>
+        </div>
+        <div className="ff-banner-actions">
+          <button className="ff-btn ff-btn-primary" onClick={onFill} type="button">
+            <Icon name="check" /> Fill Form
+          </button>
+          <button className="ff-btn" onClick={onAnalyze} type="button">
+            <Icon name="analyze" /> Analyze
+          </button>
+          <button className="ff-btn" onClick={onSelectProfile} type="button">
+            Open Profile
+          </button>
+        </div>
       </div>
-    </Card>
-  </TabFrame>
-);
 
-interface DocumentsTabProps {
-  documents: DocumentItem[];
-  onDelete: (documentId: string) => void;
-  onQueryChange: (value: string) => void;
-  onUpload: () => void;
-  onView: (document: DocumentItem) => void;
-  query: string;
-  selectedDocument?: DocumentItem;
-}
+      {/* Current Profile */}
+      <div className="ff-home-section">
+        <div className="ff-home-section-title">Current Profile</div>
+        <button className="ff-current-profile" onClick={onSelectProfile} type="button">
+          <span className="ff-current-profile-emoji">{activeProfile.emoji}</span>
+          <div className="ff-current-profile-info">
+            <strong>{activeProfile.name}</strong>
+            <span>{activeProfile.subtitle}</span>
+          </div>
+          <Badge tone="success">Active</Badge>
+        </button>
+      </div>
 
-const DocumentsTab: React.FC<DocumentsTabProps> = ({
-  documents,
-  onDelete,
-  onQueryChange,
-  onUpload,
-  onView,
-  query,
-  selectedDocument,
-}) => (
-  <TabFrame
-    eyebrow="Documents"
-    title="Keep application files close."
-    description="Manage resumes, certificates, and offer letters used across personas."
-    actions={<Button icon="upload" onClick={onUpload} variant="primary">Upload</Button>}
-  >
-    <div className="ff-toolbar">
-      <SearchBar onChange={onQueryChange} placeholder="Search documents" value={query} />
-    </div>
-    <div className="ff-document-grid">
-      <Card className="ff-library-card" icon="resume" title="Document Library">
-        {documents.length === 0 ? (
-          <EmptyState detail="Upload a resume or clear the search filter." title="No documents found" />
-        ) : (
-          <div className="ff-list">
-            {documents.map((document) => (
-              <div className="ff-list-row ff-document-row" key={document.id}>
-                <div>
-                  <strong>{document.name}</strong>
-                  <span>{document.category} - Updated {document.updated}</span>
-                </div>
-                <div className="ff-row-actions">
-                  <Button icon="eye" onClick={() => onView(document)} title={`View ${document.name}`} variant="ghost">
-                    View
-                  </Button>
-                  <Button icon="trash" onClick={() => onDelete(document.id)} title={`Delete ${document.name}`} variant="danger">
-                    Delete
-                  </Button>
-                </div>
+      {/* Quick Actions */}
+      <div className="ff-home-section">
+        <div className="ff-home-section-title">Quick Actions</div>
+        <div className="ff-quick-actions">
+          <button className="ff-quick-action" onClick={onFill} type="button">
+            <Icon name="check" /> Fill Form
+          </button>
+          <button className="ff-quick-action" onClick={onAnalyze} type="button">
+            <Icon name="analyze" /> Analyze Page
+          </button>
+          <button className="ff-quick-action" onClick={onGenerate} type="button">
+            <Icon name="zap" /> Generate
+          </button>
+        </div>
+      </div>
+
+      {/* Today's Progress */}
+      <div className="ff-home-section">
+        <div className="ff-home-section-title">Today&apos;s Progress</div>
+        <div className="ff-progress-grid">
+          <div className="ff-progress-stat">
+            <strong>{formsFilled}</strong>
+            <span>Forms Filled</span>
+          </div>
+          <div className="ff-progress-stat">
+            <strong>{aiResponses}</strong>
+            <span>AI Responses</span>
+          </div>
+          <div className="ff-progress-stat">
+            <strong>{timeSaved}</strong>
+            <span>Time Saved</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="ff-home-section">
+        <div className="ff-home-section-title">Recent Activity</div>
+        {groupedActivity.map((group) => (
+          <div key={group.date}>
+            <div className="ff-activity-date">{group.date}</div>
+            {group.items.map((item) => (
+              <div className="ff-activity-item" key={item.id}>
+                <span>{item.title}</span>
+                <span>{item.time}</span>
               </div>
             ))}
           </div>
-        )}
-      </Card>
-
-      <Card icon="eye" title="Preview">
-        {selectedDocument ? (
-          <div className="ff-preview">
-            <strong>{selectedDocument.name}</strong>
-            <span>{selectedDocument.category} document selected for form workflows.</span>
-            <Badge>Mock preview</Badge>
-          </div>
-        ) : (
-          <EmptyState detail="Select a document to preview its metadata." title="Nothing selected" />
-        )}
-      </Card>
+        ))}
+      </div>
     </div>
-  </TabFrame>
-);
+  );
+};
 
-interface AnalyticsTabProps {
-  applicationsFilled: number;
-  personasCreated: number;
-  responsesGenerated: number;
+/* ================================================================
+   PROFILE WORKSPACE
+   ================================================================ */
+
+interface ProfileWorkspaceProps {
+  profile: ProfileModel;
+  workspaceTab: WorkspaceTab;
+  onTabChange: (tab: WorkspaceTab) => void;
+  expandedSections: Set<string>;
+  onToggleSection: (key: string) => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onUploadDoc: () => void;
+  onDeleteDoc: (id: string) => void;
+  onAiCommand: (cmd: string) => void;
 }
 
-const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ applicationsFilled, personasCreated, responsesGenerated }) => {
-  const metrics = [
-    { label: 'Applications Filled', value: String(applicationsFilled), delta: '+1 when Fill Current Form runs' },
-    { label: 'Time Saved', value: `${Math.round(applicationsFilled * 0.19)}h`, delta: 'Estimated from autofill activity' },
-    { label: 'Personas Created', value: String(personasCreated), delta: 'Live persona count' },
-    { label: 'Responses Generated', value: String(responsesGenerated), delta: '+1 when assistant generates' },
+const ProfileWorkspace: React.FC<ProfileWorkspaceProps> = ({
+  profile, workspaceTab, onTabChange, expandedSections, onToggleSection,
+  onEdit, onDelete, onUploadDoc, onDeleteDoc, onAiCommand,
+}) => {
+  const tabs: { id: WorkspaceTab; label: string }[] = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'skills', label: 'Skills' },
+    { id: 'projects', label: 'Projects' },
+    { id: 'documents', label: 'Documents' },
+  ];
+
+  const healthLabel = profile.health >= 80 ? 'Excellent' : profile.health >= 60 ? 'Good' : 'Needs Attention';
+  const healthClass = profile.health >= 80 ? 'is-excellent' : profile.health >= 60 ? 'is-good' : 'is-needs-work';
+
+  return (
+    <div className="ff-workspace">
+      {/* HERO */}
+      <div className="ff-hero">
+        <div className="ff-hero-top">
+          <div>
+            <div className="ff-hero-identity">
+              <span className="ff-hero-emoji">{profile.emoji}</span>
+              <span className="ff-hero-name">{profile.name}</span>
+            </div>
+            <div className="ff-hero-subtitle">{profile.subtitle}</div>
+          </div>
+          <div className="ff-hero-actions">
+            <button className="ff-btn ff-btn-sm" onClick={onEdit} type="button">
+              <Icon name="edit" /> Edit
+            </button>
+            <button className="ff-btn ff-btn-danger ff-btn-sm" onClick={onDelete} type="button">
+              <Icon name="trash" />
+            </button>
+          </div>
+        </div>
+        <div className="ff-hero-meta">
+          <span className={`ff-meta-badge is-active`}>
+            <span className="ff-meta-dot" /> Active Profile
+          </span>
+          <span className="ff-meta-text">
+            <Icon name="clock" /> Updated {profile.lastUpdated}
+          </span>
+          {profile.resume && (
+            <span className="ff-meta-text">
+              <Icon name="file" /> Resume Attached
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* HEALTH */}
+      <div className="ff-health">
+        <div className="ff-health-header">
+          <span className="ff-health-label">Profile Health</span>
+          <span className={`ff-health-status ${healthClass}`}>
+            {healthLabel} · {profile.health}%
+          </span>
+        </div>
+        <div className="ff-health-bar-track">
+          <div
+            className={`ff-health-bar-fill ${healthClass}`}
+            style={{ width: `${profile.health}%` }}
+          />
+        </div>
+        {profile.missingFields.length > 0 && (
+          <div className="ff-health-missing">
+            <span style={{ background: 'transparent', color: 'var(--text-tertiary)', padding: 0 }}>Missing:</span>
+            {profile.missingFields.map((f) => (
+              <span key={f}>{f}</span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* TABS */}
+      <div className="ff-ws-tabs">
+        {tabs.map((tab) => (
+          <button
+            className={`ff-ws-tab ${workspaceTab === tab.id ? 'is-active' : ''}`}
+            key={tab.id}
+            onClick={() => onTabChange(tab.id)}
+            type="button"
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* TAB CONTENT */}
+      <div className="ff-ws-content">
+        {workspaceTab === 'overview' && (
+          <OverviewPanel
+            profile={profile}
+            expanded={expandedSections}
+            onToggle={onToggleSection}
+            onAiCommand={onAiCommand}
+          />
+        )}
+        {workspaceTab === 'skills' && <SkillsPanel skills={profile.skills} />}
+        {workspaceTab === 'projects' && <ProjectsPanel projects={profile.projects} />}
+        {workspaceTab === 'documents' && (
+          <DocumentsPanel
+            documents={profile.documents}
+            onUpload={onUploadDoc}
+            onDelete={onDeleteDoc}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ================================================================
+   OVERVIEW PANEL
+   ================================================================ */
+
+interface OverviewPanelProps {
+  profile: ProfileModel;
+  expanded: Set<string>;
+  onToggle: (key: string) => void;
+  onAiCommand: (cmd: string) => void;
+}
+
+const OverviewPanel: React.FC<OverviewPanelProps> = ({ profile, expanded, onToggle, onAiCommand }) => {
+  const aiCommands = [
+    'Generate Cover Letter',
+    'Generate Summary',
+    'Explain Project',
+    'Interview Response',
+    'Optimize Resume',
   ];
 
   return (
-    <TabFrame
-      eyebrow="Analytics"
-      title="Measure the workflow lift."
-      description="Activity, automation value, and generated content in one operational view."
-    >
-      <div className="ff-metric-grid">
-        {metrics.map((metric) => (
-          <Card key={metric.label}>
-            <div className="ff-metric">
-              <span>{metric.label}</span>
-              <strong>{metric.value}</strong>
-              <small>{metric.delta}</small>
+    <>
+      {/* Resume */}
+      <CollapsibleSection title="Resume" sectionKey="resume" expanded={expanded} onToggle={onToggle}>
+        {profile.resume ? (
+          <div className="ff-resume-row">
+            <div className="ff-resume-icon"><Icon name="file" /></div>
+            <div className="ff-resume-info">
+              <strong>{profile.resume.name}</strong>
+              <span>Updated {profile.resume.updated}</span>
             </div>
-          </Card>
+          </div>
+        ) : (
+          <div className="ff-empty"><strong>No resume attached</strong><span>Upload a resume to get started</span></div>
+        )}
+      </CollapsibleSection>
+
+      {/* Stats */}
+      <CollapsibleSection title="Stats" sectionKey="stats" expanded={expanded} onToggle={onToggle}>
+        <div className="ff-stats-grid">
+          <div className="ff-stat-box"><strong>{profile.documents.length}</strong><span>Documents</span></div>
+          <div className="ff-stat-box"><strong>{profile.projects.length}</strong><span>Projects</span></div>
+          <div className="ff-stat-box"><strong>{profile.skills.length}</strong><span>Skills</span></div>
+          <div className="ff-stat-box"><strong>{profile.experience}</strong><span>Experience</span></div>
+        </div>
+      </CollapsibleSection>
+
+      {/* Focus Areas */}
+      <CollapsibleSection title="Focus Areas" sectionKey="focus" expanded={expanded} onToggle={onToggle}>
+        <div className="ff-tags">
+          {profile.focusAreas.map((area) => (
+            <span className="ff-tag" key={area}>{area}</span>
+          ))}
+        </div>
+      </CollapsibleSection>
+
+      {/* Recent Projects */}
+      <CollapsibleSection title="Recent Projects" sectionKey="projects" expanded={expanded} onToggle={onToggle}>
+        {profile.projects.slice(0, 3).map((project) => (
+          <div className="ff-project-item" key={project.id}>
+            <div>
+              <div className="ff-project-name">{project.name}</div>
+              <div className="ff-project-desc">{project.description}</div>
+            </div>
+          </div>
         ))}
-      </div>
-    </TabFrame>
+      </CollapsibleSection>
+
+      {/* Knowledge Base */}
+      <CollapsibleSection title="Knowledge Base" sectionKey="kb" expanded={expanded} onToggle={onToggle}>
+        {profile.knowledgeBase.map((group) => (
+          <div className="ff-kb-group" key={group.label}>
+            <div className="ff-kb-group-label">{group.label}</div>
+            {group.entries.map((entry) => (
+              <div className="ff-kb-entry" key={entry.key}>
+                <span>{entry.key}</span>
+                {entry.value ? (
+                  <span className="ff-kb-value">{entry.value}</span>
+                ) : (
+                  <Icon name="chevron-right" />
+                )}
+              </div>
+            ))}
+          </div>
+        ))}
+      </CollapsibleSection>
+
+      {/* AI Commands */}
+      <CollapsibleSection title="⚡ AI Commands" sectionKey="ai" expanded={expanded} onToggle={onToggle}>
+        {aiCommands.map((cmd) => (
+          <button className="ff-command-row" key={cmd} onClick={() => onAiCommand(cmd)} type="button">
+            <span>{cmd}</span>
+            <Icon name="chevron-right" />
+          </button>
+        ))}
+      </CollapsibleSection>
+    </>
   );
 };
 
-interface SettingsTabProps {
-  aiTone: AiTone;
-  securityEnabled: boolean;
-  theme: ThemeMode;
-  websiteIntegration: boolean;
-  onAiToneChange: (tone: AiTone) => void;
-  onOpenWebsite: (label?: string) => void;
-  onSecurityChange: (enabled: boolean) => void;
-  onThemeChange: (theme: ThemeMode) => void;
-  onWebsiteIntegrationChange: (enabled: boolean) => void;
-}
+/* ================================================================
+   COLLAPSIBLE SECTION
+   ================================================================ */
 
-const SettingsTab: React.FC<SettingsTabProps> = ({
-  aiTone,
-  securityEnabled,
-  theme,
-  websiteIntegration,
-  onAiToneChange,
-  onOpenWebsite,
-  onSecurityChange,
-  onThemeChange,
-  onWebsiteIntegrationChange,
-}) => (
-  <TabFrame
-    eyebrow="Settings"
-    title="Configure FormForge."
-    description="Control product preferences, account sync, security, and website integration."
-    actions={
-      <div className="ff-hero-actions">
-        <Button icon="globe" onClick={() => onOpenWebsite('Opened account')} variant="secondary">
-          Manage Account
-        </Button>
-      </div>
-    }
-  >
-    <div className="ff-settings-grid">
-      <Card icon="theme" title="Theme">
-        <SegmentedControl label="Theme" onChange={(value) => onThemeChange(value as ThemeMode)} options={['light', 'dark']} value={theme} />
-      </Card>
-
-      <Card icon="shield" title="Security">
-        <ToggleRow checked={securityEnabled} detail="Require vault unlock before showing sensitive data" label="Vault protection" onChange={onSecurityChange} />
-      </Card>
-
-      <Card icon="spark" title="AI Configuration">
-        <SegmentedControl
-          label="Tone"
-          onChange={(value) => onAiToneChange(value as AiTone)}
-          options={['Professional', 'Concise', 'Confident']}
-          value={aiTone}
-        />
-      </Card>
-
-      <Card icon="globe" title="Website Integration">
-        <ToggleRow checked={websiteIntegration} detail="Allow dashboard sync and account workflows" label="Dashboard sync" onChange={onWebsiteIntegrationChange} />
-      </Card>
-    </div>
-  </TabFrame>
-);
-
-const FutureFeatureTab: React.FC<{
-  feature: { description: string; title: string };
-  onOpenWebsite: (label?: string) => void;
-}> = ({ feature, onOpenWebsite }) => (
-  <TabFrame
-    eyebrow="Roadmap"
-    title={feature.title}
-    description={feature.description}
-    actions={<Button icon="globe" onClick={() => onOpenWebsite(`Opened ${feature.title}`)} variant="primary">Open Dashboard</Button>}
-  >
-    <Card>
-      <EmptyState
-        detail="This feature has a permanent place in navigation and will connect to the FormForge web app as it ships."
-        title={`${feature.title} is coming soon`}
-      />
-    </Card>
-    <div className="ff-roadmap-grid">
-      <Card icon="check" title="Planned Controls">
-        <StatusRow label="Navigation" tone="success" value="Available now" />
-        <StatusRow label="Mock data" tone="success" value="Ready" />
-        <StatusRow label="Backend integration" value="Future" />
-      </Card>
-      <Card icon="globe" title="Website Entry">
-        <div className="ff-preview">
-          <strong>formforge.app</strong>
-          <span>Use the dashboard button to access account, billing, and web workflows.</span>
-        </div>
-      </Card>
-    </div>
-  </TabFrame>
-);
-
-interface TabFrameProps {
-  actions?: React.ReactNode;
-  children: React.ReactNode;
-  description: string;
-  eyebrow: string;
+interface CollapsibleSectionProps {
   title: string;
+  sectionKey: string;
+  expanded: Set<string>;
+  onToggle: (key: string) => void;
+  children: React.ReactNode;
 }
 
-const TabFrame: React.FC<TabFrameProps> = ({ actions, children, description, eyebrow, title }) => (
-  <section className="ff-tab">
-    <div className="ff-tab-header">
-      <div>
-        <span className="ff-eyebrow">{eyebrow}</span>
-        <h2>{title}</h2>
-        <p>{description}</p>
-      </div>
-      {actions && <div className="ff-tab-actions">{actions}</div>}
-    </div>
-    <div className="ff-tab-content">{children}</div>
-  </section>
-);
-
-const ActivityList: React.FC<{ activity: ActivityItem[] }> = ({ activity }) => {
-  if (activity.length === 0) {
-    return <EmptyState detail="Recent actions will appear here." title="No activity yet" />;
-  }
+const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
+  title, sectionKey, expanded, onToggle, children,
+}) => {
+  const isOpen = expanded.has(sectionKey);
 
   return (
-    <div className="ff-list ff-list-compact">
-      {activity.slice(0, 4).map((item) => (
-        <div className="ff-list-row" key={item.id}>
+    <div className="ff-section">
+      <button className="ff-section-header" onClick={() => onToggle(sectionKey)} type="button">
+        <span className="ff-section-title">{title}</span>
+        <span className={`ff-section-toggle ${isOpen ? 'is-open' : 'is-closed'}`}>
+          <Icon name="chevron-down" />
+        </span>
+      </button>
+      {isOpen && <div className="ff-section-body">{children}</div>}
+    </div>
+  );
+};
+
+/* ================================================================
+   SKILLS PANEL
+   ================================================================ */
+
+const SkillsPanel: React.FC<{ skills: string[] }> = ({ skills }) => (
+  <div className="ff-skill-grid">
+    {skills.map((skill) => (
+      <span className="ff-tag" key={skill}>{skill}</span>
+    ))}
+    <button className="ff-add-inline" type="button">
+      <Icon name="plus" /> Add Skill
+    </button>
+  </div>
+);
+
+/* ================================================================
+   PROJECTS PANEL
+   ================================================================ */
+
+const ProjectsPanel: React.FC<{ projects: ProjectItem[] }> = ({ projects }) => (
+  <div>
+    {projects.length === 0 ? (
+      <div className="ff-empty"><strong>No projects yet</strong><span>Add your first project</span></div>
+    ) : (
+      projects.map((project) => (
+        <div className="ff-project-item" key={project.id}>
           <div>
-            <strong>{item.title}</strong>
-            <span>{item.detail}</span>
+            <div className="ff-project-name">{project.name}</div>
+            <div className="ff-project-desc">{project.description}</div>
           </div>
-          <small>{item.time}</small>
+          <button className="ff-icon-btn is-danger" type="button" title="Remove">
+            <Icon name="trash" />
+          </button>
+        </div>
+      ))
+    )}
+    <button className="ff-add-inline" type="button" style={{ marginTop: 10 }}>
+      <Icon name="plus" /> Add Project
+    </button>
+  </div>
+);
+
+/* ================================================================
+   DOCUMENTS PANEL
+   ================================================================ */
+
+interface DocumentsPanelProps {
+  documents: DocumentItem[];
+  onUpload: () => void;
+  onDelete: (id: string) => void;
+}
+
+const DocumentsPanel: React.FC<DocumentsPanelProps> = ({ documents, onUpload, onDelete }) => (
+  <div>
+    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+      <button className="ff-btn ff-btn-primary ff-btn-sm" onClick={onUpload} type="button">
+        <Icon name="upload" /> Upload
+      </button>
+    </div>
+    {documents.length === 0 ? (
+      <div className="ff-empty"><strong>No documents</strong><span>Upload your first document</span></div>
+    ) : (
+      documents.map((doc) => (
+        <div className="ff-doc-item" key={doc.id}>
+          <div className="ff-doc-info">
+            <strong>{doc.name}</strong>
+            <span>{doc.category} · {doc.updated}</span>
+          </div>
+          <div className="ff-doc-actions">
+            <button className="ff-icon-btn" type="button" title="View"><Icon name="eye" /></button>
+            <button className="ff-icon-btn is-danger" onClick={() => onDelete(doc.id)} type="button" title="Delete"><Icon name="trash" /></button>
+          </div>
+        </div>
+      ))
+    )}
+  </div>
+);
+
+/* ================================================================
+   VAULT TAB
+   ================================================================ */
+
+const VaultTab: React.FC<{ unlocked: boolean; onToggle: () => void }> = ({ unlocked, onToggle }) => (
+  <div>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div className="ff-page-title" style={{ marginBottom: 0 }}>Vault</div>
+      <button className="ff-btn ff-btn-primary ff-btn-sm" onClick={onToggle} type="button">
+        <Icon name={unlocked ? 'shield' : 'unlock'} />
+        {unlocked ? 'Lock' : 'Unlock'}
+      </button>
+    </div>
+    <div className="ff-vault-grid">
+      {vaultEntries.map((entry) => (
+        <div className="ff-vault-item" key={entry.label}>
+          <span className="ff-vault-item-label">{entry.label}</span>
+          <span className={`ff-vault-item-value ${unlocked ? '' : 'is-locked'}`}>
+            {unlocked ? entry.value : '••••••••'}
+          </span>
         </div>
       ))}
     </div>
+  </div>
+);
+
+/* ================================================================
+   ANALYTICS TAB
+   ================================================================ */
+
+interface AnalyticsTabProps {
+  formsFilled: number;
+  responsesGenerated: number;
+  profileCount: number;
+}
+
+const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ formsFilled, responsesGenerated, profileCount }) => {
+  const metrics = [
+    { label: 'Applications Filled', value: String(formsFilled), delta: '+12 this week' },
+    { label: 'Time Saved', value: `${Math.round(formsFilled * 0.19)}h`, delta: 'Estimated from autofill' },
+    { label: 'Profiles', value: String(profileCount), delta: 'Active profiles' },
+    { label: 'AI Responses', value: String(responsesGenerated), delta: '+34 this week' },
+  ];
+
+  return (
+    <div>
+      <div className="ff-page-title">Analytics</div>
+      <div className="ff-metric-grid">
+        {metrics.map((m) => (
+          <div className="ff-metric-card" key={m.label}>
+            <div className="ff-metric-value">{m.value}</div>
+            <div className="ff-metric-label">{m.label}</div>
+            <div className="ff-metric-delta">{m.delta}</div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 
-const TagList: React.FC<{ tags: string[] }> = ({ tags }) => (
-  <div className="ff-tags">
-    {tags.map((tag) => (
-      <span key={tag}>{tag}</span>
-    ))}
-  </div>
-);
+/* ================================================================
+   SETTINGS TAB
+   ================================================================ */
 
-const StatusRow: React.FC<{ label: string; value: string; tone?: 'success' }> = ({ label, value, tone }) => (
-  <div className="ff-status-row">
-    <span>{label}</span>
-    <strong className={tone === 'success' ? 'is-success' : ''}>{value}</strong>
-  </div>
-);
-
-interface InputProps {
-  label: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-  value: string;
+interface SettingsTabProps {
+  theme: ThemeMode;
+  onThemeChange: (t: ThemeMode) => void;
+  onOpenWebsite: () => void;
 }
 
-const Input: React.FC<InputProps> = ({ label, onChange, placeholder, value }) => (
-  <label className="ff-field">
-    <span>{label}</span>
-    <input onChange={(event) => onChange(event.target.value)} placeholder={placeholder} type="text" value={value} />
-  </label>
-);
+const SettingsTab: React.FC<SettingsTabProps> = ({ theme, onThemeChange, onOpenWebsite }) => (
+  <div>
+    <div className="ff-page-title">Settings</div>
 
-interface SegmentedControlProps {
-  label: string;
-  onChange: (value: string) => void;
-  options: string[];
-  value: string;
-}
+    <div className="ff-settings-group">
+      <div className="ff-settings-group-title">Appearance</div>
+      <div className="ff-setting-row">
+        <div>
+          <div className="ff-setting-label">Theme</div>
+          <div className="ff-setting-desc">Toggle between light and dark mode</div>
+        </div>
+        <div className="ff-segmented">
+          <button className={theme === 'light' ? 'is-active' : ''} onClick={() => onThemeChange('light')} type="button">Light</button>
+          <button className={theme === 'dark' ? 'is-active' : ''} onClick={() => onThemeChange('dark')} type="button">Dark</button>
+        </div>
+      </div>
+    </div>
 
-const SegmentedControl: React.FC<SegmentedControlProps> = ({ label, onChange, options, value }) => (
-  <div className="ff-segmented" role="group" aria-label={label}>
-    {options.map((option) => (
-      <button className={value === option ? 'is-active' : ''} key={option} onClick={() => onChange(option)} type="button">
-        {option}
-      </button>
-    ))}
-  </div>
-);
+    <div className="ff-settings-group">
+      <div className="ff-settings-group-title">Account</div>
+      <div className="ff-setting-row">
+        <div>
+          <div className="ff-setting-label">Dashboard</div>
+          <div className="ff-setting-desc">Manage your account on formforge.app</div>
+        </div>
+        <button className="ff-btn ff-btn-sm" onClick={onOpenWebsite} type="button">
+          Open <Icon name="external" />
+        </button>
+      </div>
+      <div className="ff-setting-row">
+        <div>
+          <div className="ff-setting-label">Sync</div>
+          <div className="ff-setting-desc">Profiles and documents sync automatically</div>
+        </div>
+        <span className="ff-badge ff-badge-success">Active</span>
+      </div>
+    </div>
 
-interface ToggleRowProps {
-  checked: boolean;
-  detail: string;
-  label: string;
-  onChange: (checked: boolean) => void;
-}
-
-const ToggleRow: React.FC<ToggleRowProps> = ({ checked, detail, label, onChange }) => (
-  <label className="ff-toggle-row">
-    <span>
-      <strong>{label}</strong>
-      <small>{detail}</small>
-    </span>
-    <input checked={checked} onChange={(event) => onChange(event.target.checked)} type="checkbox" />
-  </label>
-);
-
-const EmptyState: React.FC<{ detail: string; title: string }> = ({ detail, title }) => (
-  <div className="ff-empty-state">
-    <strong>{title}</strong>
-    <span>{detail}</span>
+    <div className="ff-settings-group">
+      <div className="ff-settings-group-title">About</div>
+      <div className="ff-setting-row">
+        <div>
+          <div className="ff-setting-label">FormForge</div>
+          <div className="ff-setting-desc">Version 1.0.0</div>
+        </div>
+      </div>
+    </div>
   </div>
 );
 
