@@ -11,14 +11,9 @@ import './popup.css';
 type TabId =
   | 'home'
   | 'personas'
-  | 'assistant'
+  | 'personaWorkspace'
   | 'vault'
-  | 'documents'
   | 'analytics'
-  | 'autofill'
-  | 'templates'
-  | 'integrations'
-  | 'team'
   | 'settings';
 
 type ThemeMode = 'light' | 'dark';
@@ -64,14 +59,8 @@ const FORMFORGE_URL = 'https://formforge.app/';
 const navItems: NavItem[] = [
   { id: 'home', label: 'Home', icon: 'dashboard' },
   { id: 'personas', label: 'Personas', icon: 'persona' },
-  { id: 'assistant', label: 'AI Assistant', icon: 'spark' },
   { id: 'vault', label: 'Vault', icon: 'shield' },
-  { id: 'documents', label: 'Documents', icon: 'resume' },
   { id: 'analytics', label: 'Analytics', icon: 'analytics' },
-  { id: 'autofill', label: 'Autofill Rules', icon: 'check', status: 'soon' },
-  { id: 'templates', label: 'Templates', icon: 'file', status: 'soon' },
-  { id: 'integrations', label: 'Integrations', icon: 'globe', status: 'soon' },
-  { id: 'team', label: 'Team', icon: 'persona', status: 'soon' },
   { id: 'settings', label: 'Settings', icon: 'settings' },
 ];
 
